@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký - Course Registration</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    body { background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%); min-height: 100vh; display: flex; align-items: center; }
+    .card { border: none; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .card-header { background: linear-gradient(135deg, #2e7d32, #388e3c); border-radius: 16px 16px 0 0 !important; }
+    .btn-success { background: linear-gradient(135deg, #2e7d32, #388e3c); border: none; }
+    .btn-success:hover { background: linear-gradient(135deg, #1b5e20, #2e7d32); }
+    .form-control:focus { border-color: #388e3c; box-shadow: 0 0 0 0.2rem rgba(56,142,60,.25); }
+    .strength-bar { height: 4px; border-radius: 2px; transition: width .3s, background .3s; }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-sm-10 col-md-7 col-lg-5 col-xl-4">
+        <div class="card">
+          <div class="card-header text-white text-center py-4">
+            <i class="bi bi-person-plus-fill fs-1 mb-2 d-block"></i>
+            <h4 class="mb-0 fw-bold">Tạo tài khoản</h4>
+            <small class="opacity-75">Đăng ký sinh viên</small>
+          </div>
+          <div class="card-body p-4">
+            <div id="alertBox" class="alert d-none" role="alert"></div>
+            <form id="registerForm" novalidate>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Username <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person"></i></span>
+                  <input type="text" id="username" class="form-control" placeholder="Tối thiểu 3 ký tự" required minlength="3" />
+                </div>
+                <div class="invalid-feedback">Username tối thiểu 3 ký tự.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input type="email" id="email" class="form-control" placeholder="example@email.com" required />
+                </div>
+                <div class="invalid-feedback">Email không hợp lệ.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input type="password" id="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required minlength="6" oninput="checkStrength(this.value)" />
+                  <button type="button" class="btn btn-outline-secondary" onclick="togglePwd('password','eye1')">
+                    <i class="bi bi-eye" id="eye1"></i>
+                  </button>
+                </div>
+                <div class="mt-1 bg-secondary bg-opacity-25 rounded">
+                  <div id="strengthBar" class="strength-bar" style="width:0"></div>
+                </div>
+                <small id="strengthText" class="text-muted"></small>
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Xác nhận Password <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                  <input type="password" id="confirm" class="form-control" placeholder="Nhập lại password" required />
+                  <button type="button" class="btn btn-outline-secondary" onclick="togglePwd('confirm','eye2')">
+                    <i class="bi bi-eye" id="eye2"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success w-100 py-2 fw-semibold" id="registerBtn">
+                <i class="bi bi-person-check me-2"></i>Đăng ký
+              </button>
+            </form>
+            <hr />
+            <p class="text-center mb-0 text-muted">
+              Đã có tài khoản?
+              <a href="login.html" class="text-decoration-none fw-semibold">Đăng nhập</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePwd(id, iconId) {
+      const el = document.getElementById(id);
+      const icon = document.getElementById(iconId);
+      el.type = el.type === 'password' ? 'text' : 'password';
+      icon.className = el.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    }
+
+    function checkStrength(val) {
+      const bar = document.getElementById('strengthBar');
+      const txt = document.getElementById('strengthText');
+      if (!val) { bar.style.width = '0'; txt.textContent = ''; return; }
+      let score = 0;
+      if (val.length >= 6) score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = [
+        { w: '20%', bg: '#ef5350', t: 'Rất yếu' },
+        { w: '40%', bg: '#ff7043', t: 'Yếu' },
+        { w: '60%', bg: '#ffa726', t: 'Trung bình' },
+        { w: '80%', bg: '#66bb6a', t: 'Mạnh' },
+        { w: '100%', bg: '#43a047', t: 'Rất mạnh' }
+      ];
+      const lvl = levels[Math.min(score - 1, 4)];
+      bar.style.width = lvl.w;
+      bar.style.background = lvl.bg;
+      txt.textContent = lvl.t;
+      txt.style.color = lvl.bg;
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+
+      if (!username || username.length < 3) { showAlert('Username tối thiểu 3 ký tự.', 'danger'); return; }
+      if (!email || !email.includes('@')) { showAlert('Email không hợp lệ.', 'danger'); return; }
+      if (password.length < 6) { showAlert('Password tối thiểu 6 ký tự.', 'danger'); return; }
+      if (password !== confirm) { showAlert('Mật khẩu xác nhận không khớp.', 'danger'); return; }
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng ký...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok || res.status === 201) {
+          showAlert('Đăng ký thành công! Đang chuyển đến trang đăng nhập...', 'success');
+          setTimeout(() => window.location.href = 'login.html', 1500);
+        } else {
+          showAlert(data.message || 'Đăng ký thất bại.', 'danger');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-person-check me-2"></i>Đăng ký';
+        }
+      } catch (err) {
+        showAlert('Lỗi kết nối server.', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-person-check me-2"></i>Đăng ký';
+      }
+    });
+
+    function showAlert(msg, type) {
+      const box = document.getElementById('alertBox');
+      box.className = `alert alert-${type}`;
+      box.textContent = msg;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Danh sách học phần - Course Registration</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root { --primary: #1565c0; --primary-dark: #0d47a1; }
+    body { background: #f0f4f8; min-height: 100vh; }
+    .navbar { background: linear-gradient(135deg, var(--primary), #1976d2) !important; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    .navbar-brand { font-weight: 700; font-size: 1.25rem; }
+    .search-form input:focus { border-color: #fff; box-shadow: 0 0 0 0.2rem rgba(255,255,255,.3); }
+    .course-card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); transition: transform .2s, box-shadow .2s; height: 100%; }
+    .course-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.14); }
+    .course-img { height: 160px; object-fit: cover; border-radius: 12px 12px 0 0; background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
+    .course-img-placeholder { height: 160px; border-radius: 12px 12px 0 0; background: linear-gradient(135deg, #e3f2fd, #bbdefb); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 3rem; }
+    .badge-category { font-size: .75rem; }
+    .credits-badge { background: #e8f5e9; color: #2e7d32; font-weight: 600; border-radius: 20px; padding: 3px 10px; font-size: .8rem; }
+    .btn-enroll { background: linear-gradient(135deg, var(--primary), #1976d2); border: none; }
+    .btn-enroll:hover { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); }
+    .page-link { color: var(--primary); }
+    .page-item.active .page-link { background: var(--primary); border-color: var(--primary); }
+    .hero { background: linear-gradient(135deg, var(--primary), #1976d2); color: white; padding: 40px 0 30px; margin-bottom: 0; }
+    .skeleton { background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .enrolled-badge { position: absolute; top: 10px; right: 10px; background: #43a047; color: white; border-radius: 20px; padding: 2px 10px; font-size: .75rem; font-weight: 600; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.2); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">
+      <i class="bi bi-mortarboard-fill me-2"></i>CourseReg
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <!-- Search (center) -->
+      <form class="search-form d-flex mx-auto my-2 my-lg-0" style="max-width:360px;width:100%" onsubmit="return false">
+        <div class="input-group">
+          <input type="text" id="searchInput" class="form-control border-0" placeholder="Tìm kiếm học phần..." oninput="debounceSearch()" />
+          <button class="btn btn-light" type="button" onclick="loadCourses(0)">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link active" href="index.html"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="nav-item d-none" id="myCoursesNav">
+          <a class="nav-link" href="my-courses.html"><i class="bi bi-journal-check me-1"></i>Học phần của tôi</a>
+        </li>
+        <li class="nav-item d-none" id="adminNav">
+          <a class="nav-link" href="admin.html"><i class="bi bi-gear me-1"></i>Quản trị</a>
+        </li>
+        <li class="nav-item" id="loginNav">
+          <a class="nav-link" href="login.html"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập</a>
+        </li>
+        <li class="nav-item dropdown d-none" id="userDropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+            <span class="user-avatar" id="avatarText">U</span>
+            <span id="navUsername"></span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item-text text-muted small" id="navEmail"></span></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="my-courses.html" id="myCoursesDropLink"><i class="bi bi-journal-check me-2"></i>Học phần của tôi</a></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container text-center">
+    <h2 class="fw-bold mb-2"><i class="bi bi-book-fill me-2"></i>Danh sách học phần</h2>
+    <p class="opacity-75 mb-0">Khám phá và đăng ký các học phần phù hợp với bạn</p>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="container py-4">
+  <div id="alertBox" class="alert d-none mb-3" role="alert"></div>
+
+  <!-- Stats row -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <span class="text-muted" id="totalText">Đang tải...</span>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <label class="text-muted small me-1">Hiển thị:</label>
+      <select class="form-select form-select-sm" id="pageSizeSelect" style="width:70px" onchange="loadCourses(0)">
+        <option value="5" selected>5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="row g-4" id="courseList">
+    <!-- Skeleton placeholders -->
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 skeleton-col" id="sk1">
+      <div class="card course-card"><div class="skeleton" style="height:160px"></div><div class="card-body"><div class="skeleton mb-2" style="height:20px"></div><div class="skeleton" style="height:16px;width:60%"></div></div></div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 skeleton-col" id="sk2">
+      <div class="card course-card"><div class="skeleton" style="height:160px"></div><div class="card-body"><div class="skeleton mb-2" style="height:20px"></div><div class="skeleton" style="height:16px;width:60%"></div></div></div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 skeleton-col" id="sk3">
+      <div class="card course-card"><div class="skeleton" style="height:160px"></div><div class="card-body"><div class="skeleton mb-2" style="height:20px"></div><div class="skeleton" style="height:16px;width:60%"></div></div></div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3 skeleton-col" id="sk4">
+      <div class="card course-card"><div class="skeleton" style="height:160px"></div><div class="card-body"><div class="skeleton mb-2" style="height:20px"></div><div class="skeleton" style="height:16px;width:60%"></div></div></div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="emptyState" class="text-center py-5 d-none">
+    <i class="bi bi-search text-muted" style="font-size:3rem"></i>
+    <p class="text-muted mt-3">Không tìm thấy học phần nào.</p>
+  </div>
+
+  <!-- Pagination -->
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center" id="pagination"></ul>
+  </nav>
+</div>
+
+<!-- Enroll Modal -->
+<div class="modal fade" id="enrollModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill text-success me-2"></i>Xác nhận đăng ký</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Bạn muốn đăng ký học phần:</p>
+        <div class="p-3 rounded" style="background:#e3f2fd">
+          <strong id="modalCourseName"></strong>
+          <div class="text-muted small mt-1" id="modalCourseInfo"></div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-enroll text-white px-4" id="confirmEnrollBtn">
+          <i class="bi bi-check me-1"></i>Đăng ký
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let currentUser = null;
+  let enrolledIds = new Set();
+  let currentPage = 0;
+  let totalPages = 0;
+  let pendingEnrollId = null;
+  let searchTimer = null;
+
+  const enrollModal = new bootstrap.Modal(document.getElementById('enrollModal'));
+
+  async function init() {
+    await loadUser();
+    await loadEnrolledIds();
+    loadCourses(0);
+  }
+
+  async function loadUser() {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        currentUser = data.data;
+        const roles = currentUser.roles || [];
+        document.getElementById('loginNav').classList.add('d-none');
+        document.getElementById('userDropdown').classList.remove('d-none');
+        document.getElementById('navUsername').textContent = currentUser.username;
+        document.getElementById('navEmail').textContent = currentUser.email || '';
+        document.getElementById('avatarText').textContent = currentUser.username[0].toUpperCase();
+        if (roles.includes('STUDENT')) {
+          document.getElementById('myCoursesNav').classList.remove('d-none');
+        }
+        if (roles.includes('ADMIN')) {
+          document.getElementById('adminNav').classList.remove('d-none');
+          document.getElementById('myCoursesDropLink').classList.add('d-none');
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function loadEnrolledIds() {
+    if (!currentUser) return;
+    const roles = currentUser.roles || [];
+    if (!roles.includes('STUDENT')) return;
+    try {
+      const res = await fetch('/api/my-courses', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        enrolledIds = new Set((data.data || []).map(e => e.courseId));
+      }
+    } catch (e) {}
+  }
+
+  async function loadCourses(page) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value.trim();
+    const size = document.getElementById('pageSizeSelect').value;
+    let url = `/api/courses?page=${page}&size=${size}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    try {
+      const res = await fetch(url, { credentials: 'include' });
+      const data = await res.json();
+      const pageData = data.data;
+      renderCourses(pageData.content || []);
+      renderPagination(pageData.page || page, pageData.totalPages || 0, pageData.totalElements || 0);
+    } catch (e) {
+      document.getElementById('courseList').innerHTML = '<div class="col-12 text-center text-danger py-4">Lỗi tải dữ liệu.</div>';
+    }
+  }
+
+  function renderCourses(courses) {
+    const list = document.getElementById('courseList');
+    const empty = document.getElementById('emptyState');
+    // Remove skeletons
+    document.querySelectorAll('.skeleton-col').forEach(el => el.remove());
+
+    if (!courses.length) {
+      list.innerHTML = '';
+      empty.classList.remove('d-none');
+      return;
+    }
+    empty.classList.add('d-none');
+
+    const isStudent = currentUser && (currentUser.roles || []).includes('STUDENT');
+    const isAdmin = currentUser && (currentUser.roles || []).includes('ADMIN');
+
+    list.innerHTML = courses.map(c => {
+      const enrolled = enrolledIds.has(c.id);
+      const imgHtml = c.image
+        ? `<img src="/images/${c.image}" class="card-img-top course-img" alt="${c.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="course-img-placeholder" style="display:none"><i class="bi bi-book"></i></div>`
+        : `<div class="course-img-placeholder"><i class="bi bi-book"></i></div>`;
+
+      let actionBtn = '';
+      if (!currentUser) {
+        actionBtn = `<a href="login.html" class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập để đăng ký</a>`;
+      } else if (isStudent) {
+        if (enrolled) {
+          actionBtn = `<button class="btn btn-success btn-sm w-100" disabled><i class="bi bi-check-circle-fill me-1"></i>Đã đăng ký</button>`;
+        } else {
+          actionBtn = `<button class="btn btn-enroll text-white btn-sm w-100" onclick="openEnrollModal(${c.id},'${escHtml(c.name)}','${escHtml(c.lecturer||'')}',${c.credits})"><i class="bi bi-plus-circle me-1"></i>Enroll</button>`;
+        }
+      } else if (isAdmin) {
+        actionBtn = `<a href="admin.html" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-gear me-1"></i>Quản lý</a>`;
+      }
+
+      return `
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+          <div class="card course-card position-relative">
+            ${enrolled ? '<span class="enrolled-badge"><i class="bi bi-check-circle-fill me-1"></i>Đã đăng ký</span>' : ''}
+            <div class="position-relative overflow-hidden" style="border-radius:12px 12px 0 0">
+              ${imgHtml}
+            </div>
+            <div class="card-body d-flex flex-column">
+              <div class="mb-2">
+                ${c.categoryName ? `<span class="badge bg-primary bg-opacity-10 text-primary badge-category mb-1">${escHtml(c.categoryName)}</span>` : ''}
+              </div>
+              <h6 class="card-title fw-bold mb-1 flex-grow-1">${escHtml(c.name)}</h6>
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="credits-badge"><i class="bi bi-star-fill me-1"></i>${c.credits} tín chỉ</span>
+              </div>
+              <p class="text-muted small mb-3"><i class="bi bi-person-fill me-1"></i>${escHtml(c.lecturer || 'Chưa cập nhật')}</p>
+              ${actionBtn}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderPagination(page, pages, total) {
+    totalPages = pages;
+    document.getElementById('totalText').textContent = `Tìm thấy ${total} học phần`;
+    const ul = document.getElementById('pagination');
+    if (pages <= 1) { ul.innerHTML = ''; return; }
+
+    let html = `<li class="page-item ${page === 0 ? 'disabled' : ''}">
+      <a class="page-link" href="#" onclick="loadCourses(${page-1});return false"><i class="bi bi-chevron-left"></i></a></li>`;
+
+    for (let i = 0; i < pages; i++) {
+      if (pages > 7 && Math.abs(i - page) > 2 && i !== 0 && i !== pages - 1) {
+        if (i === 1 || i === pages - 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        continue;
+      }
+      html += `<li class="page-item ${i === page ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="loadCourses(${i});return false">${i+1}</a></li>`;
+    }
+
+    html += `<li class="page-item ${page === pages - 1 ? 'disabled' : ''}">
+      <a class="page-link" href="#" onclick="loadCourses(${page+1});return false"><i class="bi bi-chevron-right"></i></a></li>`;
+    ul.innerHTML = html;
+  }
+
+  function openEnrollModal(id, name, lecturer, credits) {
+    pendingEnrollId = id;
+    document.getElementById('modalCourseName').textContent = name;
+    document.getElementById('modalCourseInfo').textContent = `${lecturer} · ${credits} tín chỉ`;
+    enrollModal.show();
+  }
+
+  document.getElementById('confirmEnrollBtn').addEventListener('click', async () => {
+    if (!pendingEnrollId) return;
+    const btn = document.getElementById('confirmEnrollBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang đăng ký...';
+
+    try {
+      const res = await fetch(`/api/enroll/${pendingEnrollId}`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      enrollModal.hide();
+      if (res.ok || res.status === 201) {
+        enrolledIds.add(pendingEnrollId);
+        showAlert('Đăng ký học phần thành công!', 'success');
+        loadCourses(currentPage);
+      } else {
+        showAlert(data.message || 'Đăng ký thất bại.', 'danger');
+      }
+    } catch (e) {
+      showAlert('Lỗi kết nối.', 'danger');
+      enrollModal.hide();
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check me-1"></i>Đăng ký';
+  });
+
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadCourses(0), 400);
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = 'login.html';
+  }
+
+  function showAlert(msg, type) {
+    const box = document.getElementById('alertBox');
+    box.className = `alert alert-${type} alert-dismissible fade show`;
+    box.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    setTimeout(() => box.classList.add('d-none'), 4000);
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

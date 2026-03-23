@@ -1,0 +1,109 @@
+### Base URL
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+# ==============================================================
+# AUTH ENDPOINTS
+# ==============================================================
+
+### [C3] Đăng ký tài khoản STUDENT mới
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser",
+  "password": "test123",
+  "email": "testuser@example.com"
+}
+
+###
+
+### [C3] Đăng ký - username đã tồn tại (expect 409 Conflict)
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "nguyenvan",
+  "password": "test123",
+  "email": "duplicate@example.com"
+}
+
+###
+
+### [C3] Đăng ký - validation lỗi (password quá ngắn, email sai)
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "username": "ab",
+  "password": "123",
+  "email": "not-an-email"
+}
+
+###
+
+### [C5] Đăng nhập bằng ADMIN
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+###
+
+### [C5] Đăng nhập bằng STUDENT
+# @name loginStudent
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "nguyenvan",
+  "password": "student123"
+}
+
+###
+
+### [C5] Đăng nhập sai password (expect 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+
+###
+
+### [C5] Đăng nhập username không tồn tại (expect 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "notexist",
+  "password": "admin123"
+}
+
+###
+
+### Lấy thông tin user đang đăng nhập (cần đăng nhập trước)
+GET {{baseUrl}}/api/auth/me
+
+###
+
+### Đăng xuất
+POST {{baseUrl}}/api/auth/logout
+
+###
+
+### Truy cập /api/auth/me khi chưa đăng nhập (expect 401)
+GET {{baseUrl}}/api/auth/me
+
+###
+
+### Truy cập /api/admin/courses khi chưa đăng nhập (expect 401)
+GET {{baseUrl}}/api/admin/courses
+
+###

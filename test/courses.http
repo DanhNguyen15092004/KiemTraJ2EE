@@ -1,0 +1,111 @@
+### Base URL
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+# Paste JSESSIONID sau khi đăng nhập vào đây
+@adminSession = JSESSIONID=REPLACE_WITH_ADMIN_SESSION
+@studentSession = JSESSIONID=REPLACE_WITH_STUDENT_SESSION
+
+# ==============================================================
+# CÂU 1 + CÂU 8: DANH SÁCH COURSE (PUBLIC)
+# ==============================================================
+
+### [C1] Lấy tất cả học phần - trang đầu, 5 phần/trang
+GET {{baseUrl}}/api/courses?page=0&size=5
+
+###
+
+### [C1] Trang 2
+GET {{baseUrl}}/api/courses?page=1&size=5
+
+###
+
+### [C8] Tìm kiếm theo tên "Java"
+GET {{baseUrl}}/api/courses?search=Java
+
+###
+
+### [C8] Tìm kiếm theo tên "Tiếng Anh"
+GET {{baseUrl}}/api/courses?search=Tiếng Anh
+
+###
+
+### [C8] Tìm kiếm không có kết quả
+GET {{baseUrl}}/api/courses?search=xyznotexist
+
+###
+
+### Lấy chi tiết 1 học phần
+GET {{baseUrl}}/api/courses/1
+
+###
+
+### Lấy học phần không tồn tại (expect 400)
+GET {{baseUrl}}/api/courses/9999
+
+###
+
+# ==============================================================
+# CÂU 2: ADMIN CRUD COURSE
+# ==============================================================
+
+### [C2] Admin - lấy danh sách học phần
+GET {{baseUrl}}/api/admin/courses
+Cookie: {{adminSession}}
+
+###
+
+### [C2] Admin - tạo học phần mới
+POST {{baseUrl}}/api/admin/courses
+Content-Type: {{contentType}}
+Cookie: {{adminSession}}
+
+{
+  "name": "Học phần test",
+  "image": "test.png",
+  "credits": 2,
+  "lecturer": "GV. Test",
+  "categoryId": 1
+}
+
+###
+
+### [C2] Admin - tạo học phần thiếu tên (expect 400 validation error)
+POST {{baseUrl}}/api/admin/courses
+Content-Type: {{contentType}}
+Cookie: {{adminSession}}
+
+{
+  "image": "test.png",
+  "credits": 2,
+  "lecturer": "GV. Test"
+}
+
+###
+
+### [C2] Admin - cập nhật học phần (thay ID phù hợp)
+PUT {{baseUrl}}/api/admin/courses/1
+Content-Type: {{contentType}}
+Cookie: {{adminSession}}
+
+{
+  "name": "Lập trình Java (Updated)",
+  "image": "java_new.png",
+  "credits": 4,
+  "lecturer": "GS. Nguyễn Văn A (Updated)",
+  "categoryId": 1
+}
+
+###
+
+### [C2] Admin - xóa học phần vừa tạo (thay ID phù hợp)
+DELETE {{baseUrl}}/api/admin/courses/13
+Cookie: {{adminSession}}
+
+###
+
+### [C2] Student cố truy cập admin endpoint (expect 403)
+GET {{baseUrl}}/api/admin/courses
+Cookie: {{studentSession}}
+
+###

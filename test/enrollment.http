@@ -1,0 +1,67 @@
+### Base URL
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+# Paste JSESSIONID sau khi đăng nhập vào đây
+@studentSession = JSESSIONID=REPLACE_WITH_STUDENT_SESSION
+@adminSession = JSESSIONID=REPLACE_WITH_ADMIN_SESSION
+
+# ==============================================================
+# CÂU 6: ĐĂNG KÝ HỌC PHẦN (STUDENT ONLY)
+# ==============================================================
+
+### [C6] Student đăng ký học phần id=4
+POST {{baseUrl}}/api/enroll/4
+Cookie: {{studentSession}}
+
+###
+
+### [C6] Student đăng ký học phần id=5
+POST {{baseUrl}}/api/enroll/5
+Cookie: {{studentSession}}
+
+###
+
+### [C6] Đăng ký học phần đã đăng ký rồi (expect 400 - đã đăng ký rồi)
+POST {{baseUrl}}/api/enroll/4
+Cookie: {{studentSession}}
+
+###
+
+### [C6] Đăng ký học phần không tồn tại (expect 400)
+POST {{baseUrl}}/api/enroll/9999
+Cookie: {{studentSession}}
+
+###
+
+### [C6] Admin cố đăng ký học phần (expect 403 - chỉ STUDENT)
+POST {{baseUrl}}/api/enroll/2
+Cookie: {{adminSession}}
+
+###
+
+### [C6] Chưa đăng nhập cố đăng ký (expect 401)
+POST {{baseUrl}}/api/enroll/1
+
+###
+
+# ==============================================================
+# CÂU 7: MY COURSES - DANH SÁCH HỌC PHẦN ĐÃ ĐĂNG KÝ
+# ==============================================================
+
+### [C7] Lấy danh sách học phần đã đăng ký
+GET {{baseUrl}}/api/my-courses
+Cookie: {{studentSession}}
+
+###
+
+### [C7] Admin cố truy cập my-courses (expect 403)
+GET {{baseUrl}}/api/my-courses
+Cookie: {{adminSession}}
+
+###
+
+### [C7] Chưa đăng nhập truy cập my-courses (expect 401)
+GET {{baseUrl}}/api/my-courses
+
+###

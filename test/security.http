@@ -1,0 +1,85 @@
+### Base URL
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+# ==============================================================
+# SECURITY / ACCESS CONTROL TESTS (Câu 4)
+# Mục đích: Kiểm tra phân quyền đúng theo yêu cầu đề bài
+# ==============================================================
+
+# BƯỚC 1: Đăng nhập để lấy session cookie
+# Sau khi gửi request login, copy giá trị Set-Cookie từ response
+# và paste vào biến @sessionCookie bên dưới
+
+### Đăng nhập ADMIN để test quyền admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+###
+
+### Đăng nhập STUDENT để test quyền student
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "nguyenvan",
+  "password": "student123"
+}
+
+###
+
+# ==============================================================
+# Sau khi đăng nhập, paste cookie vào đây:
+# Ví dụ: @sessionCookie = JSESSIONID=ABC123XYZ
+# ==============================================================
+@sessionCookie = JSESSIONID=REPLACE_WITH_YOUR_SESSION_ID
+
+### [C4] ADMIN truy cập /api/admin/** (expect 200)
+GET {{baseUrl}}/api/admin/courses
+Cookie: {{sessionCookie}}
+
+###
+
+### [C4] STUDENT truy cập /api/admin/** (expect 403 Forbidden)
+# Dùng session của STUDENT
+GET {{baseUrl}}/api/admin/courses
+Cookie: {{sessionCookie}}
+
+###
+
+### [C4] STUDENT truy cập /api/enroll/** (expect 200 hoặc endpoint tương ứng)
+GET {{baseUrl}}/api/my-courses
+Cookie: {{sessionCookie}}
+
+###
+
+### [C4] ADMIN truy cập /api/enroll/** (expect 403 - chỉ STUDENT)
+GET {{baseUrl}}/api/my-courses
+Cookie: {{sessionCookie}}
+
+###
+
+### [C4] Ai cũng truy cập được /api/courses (expect 200)
+GET {{baseUrl}}/api/courses
+
+###
+
+### [C4] Chưa đăng nhập truy cập /api/courses (expect 200 - public)
+GET {{baseUrl}}/api/courses
+
+###
+
+### [C4] Chưa đăng nhập truy cập /api/admin/courses (expect 401)
+GET {{baseUrl}}/api/admin/courses
+
+###
+
+### [C4] Chưa đăng nhập truy cập /api/my-courses (expect 401)
+GET {{baseUrl}}/api/my-courses
+
+###

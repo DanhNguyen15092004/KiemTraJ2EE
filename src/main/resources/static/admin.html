@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản trị - Course Registration</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root { --primary: #1565c0; --admin: #6a1b9a; }
+    body { background: #f0f4f8; min-height: 100vh; }
+    .navbar { background: linear-gradient(135deg, #4a148c, #6a1b9a) !important; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    .navbar-brand { font-weight: 700; }
+    .hero { background: linear-gradient(135deg, #4a148c, #6a1b9a); color: white; padding: 32px 0 24px; }
+    .stat-card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .table-card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden; }
+    .table thead th { background: #f8f9fa; font-weight: 600; border-bottom: 2px solid #e0e0e0; white-space: nowrap; }
+    .table tbody tr:hover { background: #f3e5f5; }
+    .btn-admin { background: linear-gradient(135deg, #4a148c, #6a1b9a); border: none; color: white; }
+    .btn-admin:hover { background: linear-gradient(135deg, #38006b, #4a148c); color: white; }
+    .course-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; background: #e8eaf6; }
+    .course-thumb-placeholder { width: 48px; height: 48px; border-radius: 8px; background: #e8eaf6; display: flex; align-items: center; justify-content: center; color: #6a1b9a; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.2); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .page-link { color: #6a1b9a; }
+    .page-item.active .page-link { background: #6a1b9a; border-color: #6a1b9a; }
+    .modal-header-admin { background: linear-gradient(135deg, #4a148c, #6a1b9a); color: white; border-radius: 12px 12px 0 0; }
+    .form-control:focus, .form-select:focus { border-color: #6a1b9a; box-shadow: 0 0 0 .2rem rgba(106,27,154,.2); }
+    @media (max-width: 768px) { .table-responsive { font-size: .85rem; } }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="admin.html"><i class="bi bi-shield-fill me-2"></i>Admin Panel</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin.html"><i class="bi bi-gear me-1"></i>Quản lý học phần</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+            <span class="user-avatar" id="avatarText">A</span>
+            <span id="navUsername">Admin</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item-text text-muted small" id="navEmail"></span></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container text-center">
+    <h2 class="fw-bold mb-2"><i class="bi bi-gear-fill me-2"></i>Quản lý học phần</h2>
+    <p class="opacity-75 mb-0">Tạo, chỉnh sửa và xóa học phần trong hệ thống</p>
+  </div>
+</div>
+
+<div class="container py-4">
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card card p-3 text-center">
+        <div class="fw-bold fs-2" style="color:#6a1b9a" id="statTotal">-</div>
+        <div class="text-muted small">Tổng học phần</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card card p-3 text-center">
+        <div class="text-success fw-bold fs-2" id="statAvgCredits">-</div>
+        <div class="text-muted small">Tín chỉ TB</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card card p-3 text-center">
+        <div class="text-info fw-bold fs-2" id="statCategories">-</div>
+        <div class="text-muted small">Danh mục</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card card p-3 text-center">
+        <div class="text-warning fw-bold fs-2" id="statPages">-</div>
+        <div class="text-muted small">Số trang</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="alertBox" class="alert d-none mb-3" role="alert"></div>
+
+  <!-- Toolbar -->
+  <div class="table-card card mb-0">
+    <div class="card-header bg-white d-flex flex-wrap gap-2 align-items-center justify-content-between py-3">
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <div class="input-group" style="max-width:260px">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm..." oninput="debounceSearch()" />
+        </div>
+        <select class="form-select" id="pageSizeSelect" style="width:80px" onchange="loadCourses(0)">
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <button class="btn btn-admin px-4" onclick="openCreateModal()">
+        <i class="bi bi-plus-circle me-2"></i>Thêm học phần
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th style="width:50px">#</th>
+            <th style="width:60px">Ảnh</th>
+            <th>Tên học phần</th>
+            <th class="d-none d-md-table-cell">Danh mục</th>
+            <th class="d-none d-sm-table-cell">Tín chỉ</th>
+            <th class="d-none d-lg-table-cell">Giảng viên</th>
+            <th style="width:120px">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="courseTableBody">
+          <tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-secondary" style="width:1.5rem;height:1.5rem"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span class="text-muted small" id="paginationInfo"></span>
+      <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal fade" id="courseModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header modal-header-admin">
+        <h5 class="modal-title fw-bold" id="modalTitle"><i class="bi bi-plus-circle me-2"></i>Thêm học phần</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="courseForm" novalidate>
+          <input type="hidden" id="courseId" />
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Tên học phần <span class="text-danger">*</span></label>
+            <input type="text" id="courseName" class="form-control" placeholder="Nhập tên học phần" required />
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">Số tín chỉ <span class="text-danger">*</span></label>
+              <input type="number" id="courseCredits" class="form-control" min="1" max="10" placeholder="VD: 3" required />
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">Danh mục</label>
+              <select id="courseCategoryId" class="form-select">
+                <option value="">-- Chọn danh mục --</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Giảng viên</label>
+            <input type="text" id="courseLecturer" class="form-control" placeholder="VD: TS. Nguyễn Văn A" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Tên file ảnh</label>
+            <input type="text" id="courseImage" class="form-control" placeholder="VD: java.png" />
+            <div class="form-text">Đặt ảnh trong thư mục <code>/static/images/</code></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-admin px-4" id="saveBtn" onclick="saveCourse()">
+          <i class="bi bi-save me-1"></i>Lưu
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white border-0" style="border-radius:12px 12px 0 0">
+        <h6 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận xóa</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Bạn có chắc muốn xóa học phần:</p>
+        <strong id="deleteName" class="text-danger"></strong>
+        <p class="text-muted small mt-2 mb-0">Hành động này không thể hoàn tác.</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-danger btn-sm px-3" id="confirmDeleteBtn">
+          <i class="bi bi-trash me-1"></i>Xóa
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let currentPage = 0;
+  let totalPages = 0;
+  let deleteId = null;
+  let searchTimer = null;
+  let categories = [];
+
+  const courseModal = new bootstrap.Modal(document.getElementById('courseModal'));
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+  async function init() {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!res.ok) { window.location.href = 'login.html'; return; }
+      const data = await res.json();
+      const user = data.data;
+      if (!(user.roles || []).includes('ADMIN')) { window.location.href = 'index.html'; return; }
+      document.getElementById('navUsername').textContent = user.username;
+      document.getElementById('navEmail').textContent = user.email || '';
+      document.getElementById('avatarText').textContent = user.username[0].toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    await loadCategories();
+    loadCourses(0);
+  }
+
+  async function loadCategories() {
+    // Use courses API to extract categories
+    try {
+      const res = await fetch('/api/admin/courses?page=0&size=100', { credentials: 'include' });
+      const data = await res.json();
+      const courses = data.data?.content || [];
+      const map = new Map();
+      courses.forEach(c => { if (c.categoryId) map.set(c.categoryId, c.categoryName); });
+      categories = Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+      const sel = document.getElementById('courseCategoryId');
+      sel.innerHTML = '<option value="">-- Chọn danh mục --</option>';
+      categories.forEach(cat => {
+        sel.innerHTML += `<option value="${cat.id}">${escHtml(cat.name)}</option>`;
+      });
+    } catch (e) {}
+  }
+
+  async function loadCourses(page) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value.trim();
+    const size = document.getElementById('pageSizeSelect').value;
+    let url = `/api/admin/courses?page=${page}&size=${size}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    document.getElementById('courseTableBody').innerHTML =
+      '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-secondary" style="width:1.5rem;height:1.5rem"></div></td></tr>';
+
+    try {
+      const res = await fetch(url, { credentials: 'include' });
+      const data = await res.json();
+      const pageData = data.data;
+      renderTable(pageData.content || []);
+      renderPagination(pageData.page || page, pageData.totalPages || 0, pageData.totalElements || 0);
+    } catch (e) {
+      document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Lỗi tải dữ liệu.</td></tr>';
+    }
+  }
+
+  function renderTable(courses) {
+    document.getElementById('statTotal').textContent = courses.length > 0 ? document.getElementById('paginationInfo').dataset.total || courses.length : 0;
+    if (!courses.length) {
+      document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Không có dữ liệu</td></tr>';
+      return;
+    }
+
+    const totalCredits = courses.reduce((s, c) => s + (c.credits || 0), 0);
+    const cats = new Set(courses.map(c => c.categoryName).filter(Boolean));
+    document.getElementById('statAvgCredits').textContent = (totalCredits / courses.length).toFixed(1);
+    document.getElementById('statCategories').textContent = cats.size;
+
+    document.getElementById('courseTableBody').innerHTML = courses.map((c, i) => {
+      const thumb = c.image
+        ? `<img src="/images/${c.image}" class="course-thumb" alt="${escHtml(c.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="course-thumb-placeholder" style="display:none"><i class="bi bi-book"></i></div>`
+        : `<div class="course-thumb-placeholder"><i class="bi bi-book"></i></div>`;
+
+      return `<tr>
+        <td class="text-muted small">${currentPage * parseInt(document.getElementById('pageSizeSelect').value) + i + 1}</td>
+        <td>${thumb}</td>
+        <td><span class="fw-semibold">${escHtml(c.name)}</span></td>
+        <td class="d-none d-md-table-cell">
+          ${c.categoryName ? `<span class="badge bg-purple bg-opacity-10" style="background:#ede7f6;color:#6a1b9a">${escHtml(c.categoryName)}</span>` : '<span class="text-muted">-</span>'}
+        </td>
+        <td class="d-none d-sm-table-cell"><span class="badge bg-success bg-opacity-10 text-success">${c.credits} TC</span></td>
+        <td class="d-none d-lg-table-cell text-muted small">${escHtml(c.lecturer || '-')}</td>
+        <td>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary" onclick="openEditModal(${c.id})" title="Sửa"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="openDeleteModal(${c.id},'${escHtml(c.name)}')" title="Xóa"><i class="bi bi-trash"></i></button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderPagination(page, pages, total) {
+    totalPages = pages;
+    document.getElementById('paginationInfo').textContent = `Tổng ${total} học phần`;
+    document.getElementById('paginationInfo').dataset.total = total;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPages').textContent = pages;
+
+    const ul = document.getElementById('pagination');
+    if (pages <= 1) { ul.innerHTML = ''; return; }
+
+    let html = `<li class="page-item ${page===0?'disabled':''}">
+      <a class="page-link" href="#" onclick="loadCourses(${page-1});return false"><i class="bi bi-chevron-left"></i></a></li>`;
+    for (let i = 0; i < pages; i++) {
+      if (pages > 7 && Math.abs(i - page) > 2 && i !== 0 && i !== pages - 1) {
+        if (i === 1 || i === pages - 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        continue;
+      }
+      html += `<li class="page-item ${i===page?'active':''}"><a class="page-link" href="#" onclick="loadCourses(${i});return false">${i+1}</a></li>`;
+    }
+    html += `<li class="page-item ${page===pages-1?'disabled':''}">
+      <a class="page-link" href="#" onclick="loadCourses(${page+1});return false"><i class="bi bi-chevron-right"></i></a></li>`;
+    ul.innerHTML = html;
+  }
+
+  function openCreateModal() {
+    document.getElementById('courseId').value = '';
+    document.getElementById('courseForm').reset();
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Thêm học phần';
+    courseModal.show();
+  }
+
+  async function openEditModal(id) {
+    try {
+      const res = await fetch(`/api/admin/courses/${id}`, { credentials: 'include' });
+      const data = await res.json();
+      const c = data.data;
+      document.getElementById('courseId').value = c.id;
+      document.getElementById('courseName').value = c.name || '';
+      document.getElementById('courseCredits').value = c.credits || '';
+      document.getElementById('courseLecturer').value = c.lecturer || '';
+      document.getElementById('courseImage').value = c.image || '';
+      document.getElementById('courseCategoryId').value = c.categoryId || '';
+      document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Chỉnh sửa học phần';
+      courseModal.show();
+    } catch (e) {
+      showAlert('Không tải được thông tin học phần.', 'danger');
+    }
+  }
+
+  async function saveCourse() {
+    const id = document.getElementById('courseId').value;
+    const name = document.getElementById('courseName').value.trim();
+    const credits = parseInt(document.getElementById('courseCredits').value);
+    const lecturer = document.getElementById('courseLecturer').value.trim();
+    const image = document.getElementById('courseImage').value.trim();
+    const categoryId = document.getElementById('courseCategoryId').value;
+
+    if (!name) { showAlert('Tên học phần không được để trống.', 'danger'); return; }
+    if (!credits || credits < 1) { showAlert('Số tín chỉ phải >= 1.', 'danger'); return; }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang lưu...';
+
+    const body = { name, credits, lecturer: lecturer || null, image: image || null, categoryId: categoryId ? parseInt(categoryId) : null };
+
+    try {
+      const url = id ? `/api/admin/courses/${id}` : '/api/admin/courses';
+      const method = id ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method, credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      courseModal.hide();
+      if (res.ok || res.status === 201) {
+        showAlert(id ? 'Cập nhật thành công!' : 'Thêm học phần thành công!', 'success');
+        loadCourses(id ? currentPage : 0);
+        if (!id) await loadCategories();
+      } else {
+        showAlert(data.message || 'Lỗi lưu dữ liệu.', 'danger');
+      }
+    } catch (e) {
+      showAlert('Lỗi kết nối server.', 'danger');
+      courseModal.hide();
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-save me-1"></i>Lưu';
+  }
+
+  function openDeleteModal(id, name) {
+    deleteId = id;
+    document.getElementById('deleteName').textContent = name;
+    deleteModal.show();
+  }
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!deleteId) return;
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang xóa...';
+
+    try {
+      const res = await fetch(`/api/admin/courses/${deleteId}`, { method: 'DELETE', credentials: 'include' });
+      deleteModal.hide();
+      if (res.ok) {
+        showAlert('Xóa học phần thành công!', 'success');
+        loadCourses(currentPage);
+      } else {
+        const data = await res.json();
+        showAlert(data.message || 'Xóa thất bại.', 'danger');
+      }
+    } catch (e) {
+      showAlert('Lỗi kết nối.', 'danger');
+      deleteModal.hide();
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-trash me-1"></i>Xóa';
+    deleteId = null;
+  });
+
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadCourses(0), 400);
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = 'login.html';
+  }
+
+  function showAlert(msg, type) {
+    const box = document.getElementById('alertBox');
+    box.className = `alert alert-${type} alert-dismissible fade show`;
+    box.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    setTimeout(() => { try { box.classList.add('d-none'); } catch(e){} }, 5000);
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

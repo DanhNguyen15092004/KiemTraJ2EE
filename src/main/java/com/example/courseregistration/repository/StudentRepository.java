@@ -1,0 +1,11 @@
+package com.example.courseregistration.repository;
+
+import com.example.courseregistration.entity.Student;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface StudentRepository extends JpaRepository<Student, Long> {
+    Optional<Student> findByUsername(String username);
+    boolean existsByUsername(String username);
+}
